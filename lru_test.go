@@ -426,16 +426,16 @@ func Test_lockCache_Get(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+
+		c := &lockCache{
+			cache: cache{
+				lru:   tt.fields.lru,
+				items: tt.fields.items,
+				size:  tt.fields.size,
+			},
+		}
+		tt.setup(c)
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			c := &lockCache{
-				cache: cache{
-					lru:   tt.fields.lru,
-					items: tt.fields.items,
-					size:  tt.fields.size,
-				},
-			}
-			tt.setup(c)
 			if got := c.Get(tt.args.k); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("cache.Get() = %v, want %v", got, tt.want)
 			}
