@@ -1,7 +1,0 @@
-test:
-  override:
-    - go version
-    - go get -u github.com/mattn/goveralls
-    - GOMAXPROCS=1 go test -timeout 30s ./...
-    - GOMAXPROCS=4 go test -timeout 30s -race ./...
-    - goveralls -service=circleci -repotoken $COVERALLS_TOKEN
