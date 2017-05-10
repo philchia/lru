@@ -2,6 +2,7 @@ package lru
 
 import (
 	"container/list"
+	"sync"
 	"time"
 )
 
@@ -19,6 +20,11 @@ type cache struct {
 	lru   *list.List
 	items map[interface{}]*list.Element
 	size  int
+}
+
+type lockCache struct {
+	sync.RWMutex
+	cache
 }
 
 type item struct {
@@ -86,4 +92,37 @@ func (c *cache) Del(key interface{}) {
 func (c *cache) removeItem(ele *list.Element) {
 	c.lru.Remove(ele)
 	delete(c.items, ele.Value.(*item).k)
+}
+
+// NewLockCache create a thread safe Cache
+func NewLockCache(size int) Cache {
+	if size <= 0 {
+		panic("lur: must provide a positive num")
+	}
+
+	return &lockCache{
+		cache: cache{
+			lru:   list.New(),
+			items: make(map[interface{}]*list.Element),
+			size:  size,
+		},
+	}
+}
+
+func (c *lockCache) Get(key interface{}) interface{} {
+	c.RLock()
+	defer c.RUnlock()
+	return c.cache.Get(key)
+}
+
+func (c *lockCache) Set(key, value interface{}, expires ...time.Time) {
+	c.Lock()
+	defer c.Unlock()
+	c.cache.Set(key, value, expires...)
+}
+
+func (c *lockCache) Del(key interface{}) {
+	c.Lock()
+	defer c.Unlock()
+	c.cache.Del(key)
 }
