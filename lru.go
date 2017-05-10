@@ -7,9 +7,12 @@ import (
 
 // Cache represent a lru cache
 type Cache interface {
-	Get(k interface{}) interface{}
-	Set(k, v interface{}, expires ...time.Time)
-	Del(k interface{})
+	// Get value form cache with key, return nil if not exists
+	Get(key interface{}) interface{}
+	// Set value with key, and optional expires time
+	Set(key, value interface{}, expires ...time.Time)
+	// Del key from cache
+	Del(key interface{})
 }
 
 type cache struct {
@@ -36,8 +39,8 @@ func New(size int) Cache {
 	}
 }
 
-func (c *cache) Get(k interface{}) interface{} {
-	if v, ok := c.items[k]; ok {
+func (c *cache) Get(key interface{}) interface{} {
+	if v, ok := c.items[key]; ok {
 		item := v.Value.(*item)
 		if item.expires.IsZero() || item.expires.After(time.Now()) {
 			return item.v
@@ -47,11 +50,11 @@ func (c *cache) Get(k interface{}) interface{} {
 	return nil
 }
 
-func (c *cache) Set(k, v interface{}, expires ...time.Time) {
-	if ele, ok := c.items[k]; ok {
+func (c *cache) Set(key, value interface{}, expires ...time.Time) {
+	if ele, ok := c.items[key]; ok {
 		c.lru.MoveToFront(ele)
 		item := ele.Value.(*item)
-		item.v = v
+		item.v = value
 		if len(expires) > 0 {
 			item.expires = expires[0]
 		}
@@ -59,14 +62,14 @@ func (c *cache) Set(k, v interface{}, expires ...time.Time) {
 	}
 
 	item := &item{
-		k: k,
-		v: v,
+		k: key,
+		v: value,
 	}
 	if len(expires) > 0 {
 		item.expires = expires[0]
 	}
 
-	c.items[k] = c.lru.PushFront(item)
+	c.items[key] = c.lru.PushFront(item)
 
 	if len(c.items) > c.size {
 		item := c.lru.Back()
@@ -74,8 +77,8 @@ func (c *cache) Set(k, v interface{}, expires ...time.Time) {
 	}
 }
 
-func (c *cache) Del(k interface{}) {
-	if ele, ok := c.items[k]; ok {
+func (c *cache) Del(key interface{}) {
+	if ele, ok := c.items[key]; ok {
 		c.removeItem(ele)
 	}
 }
