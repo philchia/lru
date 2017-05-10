@@ -1,7 +1,7 @@
 test:
+  pre:
+    - go get github.com/mattn/goveralls
   override:
-    - go version
-    - go get -u github.com/mattn/goveralls
-    - GOMAXPROCS=1 go test -timeout 30s ./...
-    - GOMAXPROCS=4 go test -timeout 30s -race ./...
-    - goveralls -service=circleci -repotoken $COVERALLS_TOKEN
+    - go test -v -cover -race -coverprofile=/home/ubuntu/coverage.out
+  post:
+    - /home/ubuntu/.go_workspace/bin/goveralls -coverprofile=/home/ubuntu/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
