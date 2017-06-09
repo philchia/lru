@@ -11,6 +11,7 @@ func TestNew(t *testing.T) {
 	type args struct {
 		size int
 	}
+
 	tests := []struct {
 		name      string
 		args      args
